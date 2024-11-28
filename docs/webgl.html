@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clipping Plane 3D Model Viewer</title>
+  <title>Selective 3D Model Viewer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/GLTFLoader.js"></script>
   <style>
@@ -53,16 +53,12 @@
     document.body.appendChild(renderer.domElement);
 
     // Işıklandırma
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0); // Daha güçlü ortam ışığı
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0); // Ortam ışığı
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5); // Daha güçlü yönlendirilmiş ışık
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5); // Yönlendirilmiş ışık
     directionalLight.position.set(5, 10, 5);
     scene.add(directionalLight);
-
-    // Kesme düzlemini tanımlayın
-    const clippingPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), -1); // Yükseklik seviyesinde kesme
-    renderer.localClippingEnabled = true; // Clipping Plane'i etkinleştir
 
     // GLTFLoader ile model yükleme
     const loader = new THREE.GLTFLoader();
@@ -72,11 +68,13 @@
         console.log("Model başarıyla yüklendi.");
         const model = gltf.scene;
 
-        // Kesme düzlemini model materyallerine uygula
+        // İstenmeyen parçaları gizle, sadece kafa ve üst vücut kalsın
         model.traverse((node) => {
           if (node.isMesh) {
-            node.material.clippingPlanes = [clippingPlane];
-            node.material.clipIntersection = true; // Kesme mantığını etkinleştir
+            // Belirtilen parçaları görünür bırak, diğerlerini gizle
+            if (!["Head", "UpperBody", "Shoulders"].includes(node.name)) {
+              node.visible = false;
+            }
           }
         });
 
