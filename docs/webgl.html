@@ -28,60 +28,49 @@
 </head>
 <body>
   <script>
-    // Tarayıcı URL'sinden model parametresini alma
     const urlParams = new URLSearchParams(window.location.search);
-    const modelUrl = urlParams.get('model'); // ?model= ile gelen URL
+    const modelUrl = urlParams.get('model');
 
-    // Model URL kontrolü
     if (!modelUrl) {
-      // Model URL belirtilmemişse hata mesajı göster
       document.body.innerHTML = '<div class="error-message">Bir model URL\'si belirtilmedi!</div>';
       throw new Error('Model URL parametresi eksik');
     }
 
-    // Sahne oluşturma
     const scene = new THREE.Scene();
 
-    // Kamera oluşturma
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 1.5, 2); // Kamera konumlandırması
-    camera.lookAt(0, 1.5, 0); // Modelin üst kısmını hedefle
+    camera.position.set(0, 1.5, 3);
+    camera.lookAt(0, 1.5, 0);
 
-    // Renderer oluşturma
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.outputEncoding = THREE.sRGBEncoding;
     document.body.appendChild(renderer.domElement);
 
-    // Işıklandırma
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // Ortam ışığı
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(ambientLight);
 
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(5, 10, 7.5); // Yönlendirilmiş ışık
+    directionalLight.position.set(10, 10, 10);
     scene.add(directionalLight);
 
-    // GLTFLoader ile model yükleme
     const loader = new THREE.GLTFLoader();
     loader.load(
-      modelUrl, // Dinamik olarak belirtilen model URL'si burada kullanılır
+      modelUrl,
       function (gltf) {
         const model = gltf.scene;
+        model.scale.set(1.5, 1.5, 1.5); 
+        model.position.set(0, -1, 0);
 
-        // Model parçalarını kontrol edip, sadece ilgili parçaları görünür bırak
         model.traverse((node) => {
           if (node.isMesh) {
-            // Model parçalarını kontrol ederek "Head" ve "UpperBody" dışındaki her şeyi gizle
-            if (!["Head", "UpperBody", "Shoulders"].includes(node.name)) {
-              node.visible = false; // Görünmez yap
-            }
+            node.visible = true; 
           }
         });
 
-        // Modeli sahneye ekle
         scene.add(model);
-        animate(); // Animasyonu başlat
+        animate();
       },
       undefined,
       function (error) {
@@ -90,13 +79,11 @@
       }
     );
 
-    // Animasyon döngüsü
     function animate() {
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
     }
 
-    // Pencere boyutu değişikliğinde yeniden boyutlandırma
     window.addEventListener('resize', () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
       camera.aspect = window.innerWidth / window.innerHeight;
