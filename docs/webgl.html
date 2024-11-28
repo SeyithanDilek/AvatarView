@@ -14,16 +14,28 @@
     canvas {
       display: block;
     }
+    .error-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: red;
+      font-family: Arial, sans-serif;
+      font-size: 1.5em;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <script>
-    // URL parametrelerini almak için tarayıcı API'sini kullanıyoruz
+    // Tarayıcı URL'sinden model parametresini alma
     const urlParams = new URLSearchParams(window.location.search);
-    const modelUrl = urlParams.get('model'); // ?model= ile gelen değeri alır
+    const modelUrl = urlParams.get('model'); // ?model= ile gelen URL
 
+    // Model URL kontrolü
     if (!modelUrl) {
-      alert('Bir model URL’si belirtilmedi!');
+      // Model URL belirtilmemişse hata mesajı göster
+      document.body.innerHTML = '<div class="error-message">Bir model URL\'si belirtilmedi!</div>';
       throw new Error('Model URL parametresi eksik');
     }
 
@@ -74,6 +86,7 @@
       undefined,
       function (error) {
         console.error('GLB dosyası yüklenemedi:', error);
+        document.body.innerHTML = '<div class="error-message">Model yüklenirken bir hata oluştu.</div>';
       }
     );
 
