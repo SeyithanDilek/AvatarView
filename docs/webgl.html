@@ -55,10 +55,11 @@
     // PNG yakalama butonu
     document.getElementById("capture").addEventListener("click", () => {
       const dataURL = renderer.domElement.toDataURL("image/png"); // PNG verisi al
-      const link = document.createElement("a");
-      link.download = "model-screenshot.png";
-      link.href = dataURL;
-      link.click(); // Görüntüyü indir
+
+      // Flutter WebView'e mesaj gönder
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ status: "success", dataURL }));
+      }
     });
 
     window.addEventListener('resize', () => {
