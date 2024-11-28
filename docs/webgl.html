@@ -3,38 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dynamic 3D Model Viewer</title>
+  <title>3D Model to PNG</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/GLTFLoader.js"></script>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-    }
-    canvas {
-      display: block;
-    }
-    .error-message {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: red;
-      font-family: Arial, sans-serif;
-      font-size: 1.5em;
-      text-align: center;
-    }
-  </style>
 </head>
 <body>
+  <button id="capture">Capture PNG</button>
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const modelUrl = urlParams.get('model');
-
-    if (!modelUrl) {
-      document.body.innerHTML = '<div class="error-message">Bir model URL\'si belirtilmedi!</div>';
-      throw new Error('Model URL parametresi eksik');
-    }
+    const modelUrl = "https://models.readyplayer.me/6747b394c15ac947bc10e432.glb"; // .glb model URL'si
 
     const scene = new THREE.Scene();
 
@@ -48,15 +24,11 @@
     renderer.outputEncoding = THREE.sRGBEncoding;
     document.body.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0xffffff, 1);
-    pointLight.position.set(0, 5, 0);
-    scene.add(pointLight);
-
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(10, 10, 10);
+    directionalLight.position.set(5, 10, 5);
     scene.add(directionalLight);
 
     const loader = new THREE.GLTFLoader();
@@ -68,19 +40,26 @@
         model.scale.set(3, 3, 3);
         model.position.set(0, -1.5, 0);
         scene.add(model);
-        animate();
+        render();
       },
       undefined,
       function (error) {
         console.error('GLB dosyası yüklenemedi:', error);
-        document.body.innerHTML = '<div class="error-message">Model yüklenirken bir hata oluştu.</div>';
       }
     );
 
-    function animate() {
-      requestAnimationFrame(animate);
+    function render() {
       renderer.render(scene, camera);
     }
+
+    // PNG yakalama butonu
+    document.getElementById("capture").addEventListener("click", () => {
+      const dataURL = renderer.domElement.toDataURL("image/png"); // PNG verisi al
+      const link = document.createElement("a");
+      link.download = "model-screenshot.png";
+      link.href = dataURL;
+      link.click(); // Görüntüyü indir
+    });
 
     window.addEventListener('resize', () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
