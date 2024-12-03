@@ -58,6 +58,16 @@
         console.log('Node Name:', node.name); // Node isimlerini yazdır
       }
     });
+        model.traverse((node) => {
+      if (node.isMesh) {
+        if (node.morphTargetDictionary) {
+          console.log('Blend Shape Listesi:');
+          for (let key in node.morphTargetDictionary) {
+            console.log(`${key}: ${node.morphTargetDictionary[key]}`);
+          }
+        }
+      }
+    });
 
         // Sadece elleri gizleyip diğer tüm parçaları görünür yap
         model.traverse((node) => {
