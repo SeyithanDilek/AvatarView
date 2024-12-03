@@ -56,9 +56,12 @@
       modelUrl, // Dynamic model URL
       function (gltf) {
         const model = gltf.scene;
-        model.scale.set(1, 1, 1); // Adjust scale if necessary
-        scene.add(model);
 
+        // Scale and position adjustments
+        model.scale.set(1, 1, 1); // Adjust the scale of the model if necessary
+        model.position.set(0, 1.5, 0); // Move the model upwards (y-axis adjustment)
+
+        scene.add(model);
         animate(); // Start rendering
       },
       undefined,
