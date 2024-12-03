@@ -53,6 +53,12 @@
       function (gltf) {
         const model = gltf.scene;
 
+        model.traverse((node) => {
+      if (node.isMesh) {
+        console.log('Node Name:', node.name); // Node isimlerini yazdır
+      }
+    });
+
         // Sadece elleri gizleyip diğer tüm parçaları görünür yap
         model.traverse((node) => {
           if (node.isMesh) {
