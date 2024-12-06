@@ -59,55 +59,38 @@
 
     // GLTF Loader: Modeli yükleme
     const loader = new THREE.GLTFLoader();
-    loader.load(
-      modelUrl,
-      function (gltf) {
-        const model = gltf.scene;
+loader.load(
+  modelUrl,
+  function (gltf) {
+    const model = gltf.scene;
 
-        // Elleri gizle ve diğer parçaları görünür yap
-        model.traverse((node) => {
-          if (node.isMesh) {
-            if (node.name === 'Wolf3D_LeftHand' || node.name === 'Wolf3D_RightHand') {
-              node.visible = false; // Elleri gizle
-            } else {
-              node.visible = true; // Diğer parçaları görünür yap
-            }
-          }
-        });
-        model.traverse((node) => {
-      if (node.morphTargetDictionary) {
-        console.log(`Mesh Name: ${node.name}`);
-        console.log("Blend Shape (Viseme) Names:", Object.keys(node.morphTargetDictionary));
-      }
-    });
+    // Modelin bounding box'ını hesapla
+    const boundingBox = new THREE.Box3().setFromObject(model);
+    const center = new THREE.Vector3();
+    const size = new THREE.Vector3();
+    boundingBox.getCenter(center); // Merkez noktasını al
+    boundingBox.getSize(size); // Boyutları al
 
-        // Model ölçeği ve konumu
-        model.scale.set(4, 4, 4);
-        model.position.set(0, -1.2, 0);
-        scene.add(model);
+    console.log("Bounding Box Center:", center);
+    console.log("Bounding Box Size:", size);
 
-        // Blend Shape verilerini saklamak için nesne
-        const blendShapes = {};
+    // Modeli merkezlemek için translate uygula
+    model.position.x -= center.x; // X ekseninde ortalama
+    model.position.y -= center.y; // Y ekseninde ortalama
+    model.position.z -= center.z; // Z ekseninde ortalama
 
-        // Blend shape hedeflerini bul
-        model.traverse((node) => {
-          if (node.morphTargetDictionary) {
-            blendShapes[node.name] = {
-              mesh: node,
-              dictionary: node.morphTargetDictionary,
-              influences: node.morphTargetInfluences,
-            };
-          }
-        });
+    // Modeli sahneye ekle
+    model.scale.set(4, 4, 4); // Ölçeklendirme (isteğe bağlı)
+    scene.add(model);
 
-        // Animasyonu başlat
-        animate(blendShapes);
-      },
-      undefined,
-      function (error) {
-        console.error('Model yüklenemedi:', error);
-      }
-    );
+    animate();
+  },
+  undefined,
+  function (error) {
+    console.error('Model yüklenemedi:', error);
+  }
+);
+
 
     // Zaman takipçisi
     let clock = new THREE.Clock();
