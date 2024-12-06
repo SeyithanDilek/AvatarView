@@ -74,6 +74,12 @@
             }
           }
         });
+        model.traverse((node) => {
+      if (node.morphTargetDictionary) {
+        console.log(`Mesh Name: ${node.name}`);
+        console.log("Blend Shape (Viseme) Names:", Object.keys(node.morphTargetDictionary));
+      }
+    });
 
         // Model ölçeği ve konumu
         model.scale.set(4, 4, 4);
