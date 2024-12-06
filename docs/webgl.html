@@ -18,7 +18,7 @@
 </head>
 <body>
   <script>
-    // Mock viseme verileri - Üzgün ifade
+    // Mock viseme verileri - Üzgün ifadeyi desteklemek için güncellendi
     const mockVisemes = [
       { viseme: "mouthFrown", startTime: 0.0, endTime: 0.3 },  // Üzgün ağız başlangıcı
       { viseme: "mouthOpen", startTime: 0.4, endTime: 0.6 },   // Hafif açık ağız
@@ -57,32 +57,33 @@
     pointLight.position.set(0, 5, 0);
     scene.add(pointLight);
 
+    // GLTF Loader: Modeli yükleme
     const loader = new THREE.GLTFLoader();
-    const blendShapes = {};
-
     loader.load(
       modelUrl,
       function (gltf) {
         const model = gltf.scene;
 
-        // Modelin bounding box'ını hesapla ve merkezle
-        const boundingBox = new THREE.Box3().setFromObject(model);
-        const center = new THREE.Vector3();
-        const size = new THREE.Vector3();
-        boundingBox.getCenter(center);
-        boundingBox.getSize(size);
+        // Elleri gizle ve diğer parçaları görünür yap
+        model.traverse((node) => {
+          if (node.isMesh) {
+            if (node.name === 'Wolf3D_LeftHand' || node.name === 'Wolf3D_RightHand') {
+              node.visible = false; // Elleri gizle
+            } else {
+              node.visible = true; // Diğer parçaları görünür yap
+            }
+          }
+        });
 
-        console.log("Bounding Box Center:", center);
-        console.log("Bounding Box Size:", size);
-
-        model.position.x -= center.x;
-        model.position.y -= center.y;
-        model.position.z -= center.z;
-
-        model.scale.set(4, 4, 4); // Modeli ölçeklendir
+        // Model ölçeği ve konumu
+        model.scale.set(4, 4, 4);
+        model.position.set(0, -1.2, 0);
         scene.add(model);
 
-        // Blend shape'leri bul
+        // Blend Shape verilerini saklamak için nesne
+        const blendShapes = {};
+
+        // Blend shape hedeflerini bul
         model.traverse((node) => {
           if (node.morphTargetDictionary) {
             blendShapes[node.name] = {
@@ -93,10 +94,8 @@
           }
         });
 
-        console.log("Blend Shapes:", blendShapes);
-
         // Animasyonu başlat
-        animate();
+        animate(blendShapes);
       },
       undefined,
       function (error) {
@@ -104,29 +103,31 @@
       }
     );
 
+    // Zaman takipçisi
     let clock = new THREE.Clock();
 
-    function animate() {
-      requestAnimationFrame(animate);
+    function animate(blendShapes) {
+      requestAnimationFrame(() => animate(blendShapes));
 
       const elapsedTime = clock.getElapsedTime();
 
-      // Mock visemelere göre animasyonu uygula
+      // Mock visemeler üzerinden blend shape animasyonu
       mockVisemes.forEach((visemeData) => {
         const { viseme, startTime, endTime } = visemeData;
         const duration = endTime - startTime;
 
+        // Belirtilen zaman aralığında blend shape'i etkinleştir
         if (elapsedTime >= startTime && elapsedTime <= endTime) {
-          const t = (elapsedTime - startTime) / duration;
+          const t = (elapsedTime - startTime) / duration; // Zaman oranı
           Object.keys(blendShapes).forEach((meshName) => {
             const shapeData = blendShapes[meshName];
             if (shapeData.dictionary[viseme] !== undefined) {
               const index = shapeData.dictionary[viseme];
-              shapeData.influences[index] = Math.sin(t * Math.PI) * 0.8;
+              shapeData.influences[index] = Math.sin(t * Math.PI) * 0.8; // Yumuşak geçiş
             }
           });
         } else if (elapsedTime > endTime) {
-          // Blend shape etkisini sıfırla
+          // Blend shape'i sıfırla
           Object.keys(blendShapes).forEach((meshName) => {
             const shapeData = blendShapes[meshName];
             if (shapeData.dictionary[viseme] !== undefined) {
@@ -140,6 +141,7 @@
       renderer.render(scene, camera);
     }
 
+    // Pencere boyutu değiştirildiğinde yeniden boyutlandırma
     window.addEventListener('resize', () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
       camera.aspect = window.innerWidth / window.innerHeight;
