@@ -18,7 +18,7 @@
 </head>
 <body>
   <script>
-    // Mock viseme verileri - Üzgün ifadeyi desteklemek için güncellendi
+    // Mock viseme verileri - Üzgün ifade
     const mockVisemes = [
       { viseme: "mouthFrown", startTime: 0.0, endTime: 0.3 },  // Üzgün ağız başlangıcı
       { viseme: "mouthOpen", startTime: 0.4, endTime: 0.6 },   // Hafif açık ağız
@@ -57,66 +57,76 @@
     pointLight.position.set(0, 5, 0);
     scene.add(pointLight);
 
-    // GLTF Loader: Modeli yükleme
     const loader = new THREE.GLTFLoader();
-loader.load(
-  modelUrl,
-  function (gltf) {
-    const model = gltf.scene;
+    const blendShapes = {};
 
-    // Modelin bounding box'ını hesapla
-    const boundingBox = new THREE.Box3().setFromObject(model);
-    const center = new THREE.Vector3();
-    const size = new THREE.Vector3();
-    boundingBox.getCenter(center); // Merkez noktasını al
-    boundingBox.getSize(size); // Boyutları al
+    loader.load(
+      modelUrl,
+      function (gltf) {
+        const model = gltf.scene;
 
-    console.log("Bounding Box Center:", center);
-    console.log("Bounding Box Size:", size);
+        // Modelin bounding box'ını hesapla ve merkezle
+        const boundingBox = new THREE.Box3().setFromObject(model);
+        const center = new THREE.Vector3();
+        const size = new THREE.Vector3();
+        boundingBox.getCenter(center);
+        boundingBox.getSize(size);
 
-    // Modeli merkezlemek için translate uygula
-    model.position.x -= center.x; // X ekseninde ortalama
-    model.position.y -= center.y; // Y ekseninde ortalama
-    model.position.z -= center.z; // Z ekseninde ortalama
+        console.log("Bounding Box Center:", center);
+        console.log("Bounding Box Size:", size);
 
-    // Modeli sahneye ekle
-    model.scale.set(4, 4, 4); // Ölçeklendirme (isteğe bağlı)
-    scene.add(model);
+        model.position.x -= center.x;
+        model.position.y -= center.y;
+        model.position.z -= center.z;
 
-    animate();
-  },
-  undefined,
-  function (error) {
-    console.error('Model yüklenemedi:', error);
-  }
-);
+        model.scale.set(4, 4, 4); // Modeli ölçeklendir
+        scene.add(model);
 
+        // Blend shape'leri bul
+        model.traverse((node) => {
+          if (node.morphTargetDictionary) {
+            blendShapes[node.name] = {
+              mesh: node,
+              dictionary: node.morphTargetDictionary,
+              influences: node.morphTargetInfluences,
+            };
+          }
+        });
 
-    // Zaman takipçisi
+        console.log("Blend Shapes:", blendShapes);
+
+        // Animasyonu başlat
+        animate();
+      },
+      undefined,
+      function (error) {
+        console.error('Model yüklenemedi:', error);
+      }
+    );
+
     let clock = new THREE.Clock();
 
-    function animate(blendShapes) {
-      requestAnimationFrame(() => animate(blendShapes));
+    function animate() {
+      requestAnimationFrame(animate);
 
       const elapsedTime = clock.getElapsedTime();
 
-      // Mock visemeler üzerinden blend shape animasyonu
+      // Mock visemelere göre animasyonu uygula
       mockVisemes.forEach((visemeData) => {
         const { viseme, startTime, endTime } = visemeData;
         const duration = endTime - startTime;
 
-        // Belirtilen zaman aralığında blend shape'i etkinleştir
         if (elapsedTime >= startTime && elapsedTime <= endTime) {
-          const t = (elapsedTime - startTime) / duration; // Zaman oranı
+          const t = (elapsedTime - startTime) / duration;
           Object.keys(blendShapes).forEach((meshName) => {
             const shapeData = blendShapes[meshName];
             if (shapeData.dictionary[viseme] !== undefined) {
               const index = shapeData.dictionary[viseme];
-              shapeData.influences[index] = Math.sin(t * Math.PI) * 0.8; // Yumuşak geçiş
+              shapeData.influences[index] = Math.sin(t * Math.PI) * 0.8;
             }
           });
         } else if (elapsedTime > endTime) {
-          // Blend shape'i sıfırla
+          // Blend shape etkisini sıfırla
           Object.keys(blendShapes).forEach((meshName) => {
             const shapeData = blendShapes[meshName];
             if (shapeData.dictionary[viseme] !== undefined) {
@@ -130,7 +140,6 @@ loader.load(
       renderer.render(scene, camera);
     }
 
-    // Pencere boyutu değiştirildiğinde yeniden boyutlandırma
     window.addEventListener('resize', () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
       camera.aspect = window.innerWidth / window.innerHeight;
